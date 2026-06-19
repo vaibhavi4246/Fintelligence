@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+alembic
+psycopg2-binary
+pgvector
+pydantic>=2.7.4
+pydantic-settings
+python-dotenv
+langgraph
+langchain-core
+openai
+httpx
