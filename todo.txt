@@ -1,57 +1,48 @@
 ==============================================================
  FinDocIntel — DAY 1 TODO (Mon, Week 1)
- Owner: Sanyam  |  Branch: sanyam/day1 -> merge to dev via PR
+ Owner: Vaibhavi | Branch: vaibhavi/day1 -> merge to dev via PR
 ==============================================================
 
 DELIVERABLE (must be done by EOD — no goals, only done/not-done):
-  FastAPI project scaffolded. `docker-compose.yml` starts
-  FastAPI + PostgreSQL in ONE command. `/health` returns 200.
+  PostgreSQL schema created via Alembic, IVFFlat index created
+  on chunks.embedding, and seed inserts 1 test document cleanly.
 
 --------------------------------------------------------------
- SANYAM — Day 1 tasks
+ VAIBHAVI — Day 1 tasks
 --------------------------------------------------------------
-[ ] Create repo structure per plan §6:
-      backend/app/{agents,api,db,eval,ingestion,schemas}/
-      backend/app/main.py
-      backend/tests/{unit,integration}/
-      backend/Dockerfile
-      backend/requirements.txt
-[ ] Initialize FastAPI app in backend/app/main.py
-[ ] Add GET /health endpoint -> returns 200 + {"status":"ok"}
-[ ] requirements.txt: fastapi, uvicorn, sqlalchemy, alembic,
-      psycopg2-binary, pgvector, pydantic, python-dotenv
-[ ] Write backend/Dockerfile (python:3.11-slim, install reqs,
-      uvicorn app.main:app --host 0.0.0.0 --port 8000)
-[ ] infra/docker-compose.yml:
-      - service: api      (build ./backend, port 8000:8000)
-      - service: postgres (image: pgvector/pgvector:pg16,
-                           env POSTGRES_*, volume, port 5432)
-      - api depends_on postgres
-[ ] Verify: `docker compose up` -> both containers healthy
-[ ] Verify: curl http://localhost:8000/health -> 200
-[ ] Create .env.example (DATABASE_URL, API_SECRET_KEY,
-      OPENAI_API_KEY placeholder, NEXT_PUBLIC_API_URL)
-[ ] Create .gitignore per plan §6 (.env, __pycache__, .venv,
-      node_modules, *.pdf, data/, filings/, .vscode/, *.log)
-[ ] Commit: feat(api): scaffold FastAPI + docker-compose with
-      postgres and /health endpoint
-[ ] Open PR sanyam/day1 -> dev (description: what + why)
+[x] Create Alembic scaffold under backend/app/db/migrations
+[x] Add SQLAlchemy models + metadata for all core tables
+[x] Create initial Alembic migration (tables + enums + pgvector)
+[x] Run `alembic upgrade head` with zero errors
+[x] Verify all required tables exist
+[x] Seed 1 test document (`processing_status = pending`)
+[x] Create IVFFlat index on `chunks.embedding`
+[x] Verify seed + index + table list via psql
+[x] Update summary.md with status
+[ ] Open PR `vaibhavi/day1 -> dev`
 
 --------------------------------------------------------------
- COORDINATE — Vaibhavi Day 1 (so the stack lines up)
+ REQUIRED TABLES (project schema)
 --------------------------------------------------------------
-[ ] 9 PostgreSQL tables via Alembic migrations
-[ ] IVFFlat index on chunks.embedding
-[ ] Local DB seeds 1 test doc with no errors
-    NOTE: align DATABASE_URL + postgres service name in
-          docker-compose so her migrations run against it.
+[x] documents
+[x] chunks
+[x] intelligence_reports
+[x] claims
+[x] contradictions
+[x] risk_signals
+[x] claim_nodes
+[x] claim_edges
+[x] eval_runs
+[x] eval_test_cases
+[x] eval_results
 
 --------------------------------------------------------------
  DAY 1 DONE CHECK
 --------------------------------------------------------------
-[ ] `docker compose up` brings up FastAPI + Postgres in 1 cmd
-[ ] /health returns 200
-[ ] No secrets committed; .env.example + .gitignore in place
+[x] `alembic upgrade head` runs with 0 errors
+[x] `\dt` shows all required tables
+[x] IVFFlat index exists on `chunks.embedding`
+[x] Seed script inserts one row without DB errors
 [ ] PR opened for review
 
   If not done -> carries over as first task tomorrow.
