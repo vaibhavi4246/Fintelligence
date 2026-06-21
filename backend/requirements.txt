@@ -10,4 +10,8 @@ python-dotenv
 langgraph
 langchain-core
 openai
+groq
+sentence-transformers
+tiktoken
+numpy
 httpx
