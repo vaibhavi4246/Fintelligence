@@ -52,6 +52,7 @@ class Document(Base):
     fiscal_period: Mapped[str] = mapped_column(String(16), nullable=False)
     fiscal_year: Mapped[int] = mapped_column(Integer, nullable=False)
     source_url: Mapped[str] = mapped_column(Text, nullable=False)
+    raw_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     ingested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
     chunk_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     processing_status: Mapped[ProcessingStatus] = mapped_column(

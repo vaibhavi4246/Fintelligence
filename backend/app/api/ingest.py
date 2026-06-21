@@ -25,6 +25,7 @@ def ingest(req: IngestRequest, db: Session = Depends(get_db)) -> IngestResponse:
         fiscal_period=filing.fiscal_period,
         fiscal_year=filing.fiscal_year,
         source_url=filing.source_url,
+        raw_text=filing.text,
         processing_status=ProcessingStatus.pending,
     )
     db.add(document)

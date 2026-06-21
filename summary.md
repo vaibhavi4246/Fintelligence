@@ -177,12 +177,14 @@ CREATE INDEX ON chunks USING ivfflat (embedding vector_cosine_ops) WITH (lists =
 
 | What | Stub file to replace | Real implementation |
 |---|---|---|
-| **EDGAR fetch** | `backend/app/ingestion/edgar.py` — returns placeholder text | Real EDGAR REST API (selectolax/BeautifulSoup + XBRL facts) — Tue W1 Vaibhavi |
+| **EDGAR fetch** | `backend/app/ingestion/edgar.py` — real SEC fetch + raw text extraction | Done (Tue W1 complete) |
 | **Chunker** | `backend/app/ingestion/chunker.py` — naive 512t/50 overlap | Section-aware: MD&A 512t/50 overlap, Risk Factors at item boundaries, tables as atomic JSON chunks — Thu W1 Vaibhavi |
 
 **Interface contract (stable — do not change signatures):**
 - `fetch_filing(req: IngestRequest) -> RawFiling` — populate `.text` with real filing content
 - `chunk_text(text, fiscal_period) -> list[Chunk]` — populate `section_label`, `page_number` from real parsing
+
+- Day 2 complete: SEC submissions JSON is resolved for AAPL/GS/BLK 10-Ks, archive HTML is stripped to plain text, and `/ingest` stores `raw_text` with passing tests.
 
 ---
 
@@ -190,11 +192,11 @@ CREATE INDEX ON chunks USING ivfflat (embedding vector_cosine_ops) WITH (lists =
 
 | Day | Deliverable |
 |---|---|
-| **Tue W1** | SEC EDGAR REST API fetch working: AAPL, GS, BLK 10-Ks fetched and raw text stored |
+| **Tue W1** | SEC EDGAR REST API fetch working: AAPL, GS, BLK 10-Ks fetched and raw text stored | Done |
 | **Wed W1** | pdfplumber parser: text + section labels + tables as structured JSON |
 | **Thu W1** | Real section-aware chunker: MD&A 512t/50 overlap, Risk Factors at item boundaries, tables atomic |
 | **Fri W1** | Next.js 14 project init + document upload page + file → `POST /ingest` + status indicator |
 
 ---
 
-*Updated: 2026-06-21 | Sanyam Week 1 complete (Day 1–5). Vaibhavi Tue–Fri W1 pending.*
+*Updated: 2026-06-21 | Sanyam Week 1 complete (Day 1–5). Vaibhabi Tue W1 complete; Wed–Fri pending.*

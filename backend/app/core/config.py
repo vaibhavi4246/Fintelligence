@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     embedding_dim: int = 768
     openai_api_key: str | None = None
 
+    # SEC requests require a descriptive User-Agent.
+    sec_user_agent: str = "FinDocIntel/0.1 (contact: dev@example.com)"
+
 
 @lru_cache
 def get_settings() -> Settings:
