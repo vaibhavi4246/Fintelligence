@@ -5,15 +5,12 @@ the filing HTML into plain text for downstream chunking and storage.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import lru_cache
-from html import unescape
-from html.parser import HTMLParser
-import re
-
 import httpx
 
 from app.core.config import get_settings
+from app.ingestion.parser import ParsedSection, ParsedTable, parse_filing_content
 from app.schemas.ingest import IngestRequest
 
 
@@ -37,60 +34,8 @@ class RawFiling:
     fiscal_year: int
     source_url: str
     text: str
-
-
-class _HTMLTextExtractor(HTMLParser):
-    _BLOCK_TAGS = {
-        "article",
-        "br",
-        "div",
-        "footer",
-        "h1",
-        "h2",
-        "h3",
-        "h4",
-        "h5",
-        "h6",
-        "header",
-        "li",
-        "p",
-        "section",
-        "table",
-        "td",
-        "th",
-        "tr",
-    }
-
-    def __init__(self) -> None:
-        super().__init__()
-        self._parts: list[str] = []
-        self._skip_depth = 0
-
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        if tag in {"script", "style", "noscript"}:
-            self._skip_depth += 1
-            return
-        if tag in self._BLOCK_TAGS:
-            self._parts.append("\n")
-
-    def handle_endtag(self, tag: str) -> None:
-        if tag in {"script", "style", "noscript"} and self._skip_depth > 0:
-            self._skip_depth -= 1
-            return
-        if tag in self._BLOCK_TAGS:
-            self._parts.append("\n")
-
-    def handle_data(self, data: str) -> None:
-        if self._skip_depth == 0:
-            self._parts.append(data)
-
-    def get_text(self) -> str:
-        text = unescape("".join(self._parts))
-        text = re.sub(r"[ \t]+\n", "\n", text)
-        text = re.sub(r"\n[ \t]+", "\n", text)
-        text = re.sub(r"\n{3,}", "\n\n", text)
-        text = re.sub(r"[ \t]{2,}", " ", text)
-        return text.strip()
+    sections: list[ParsedSection] = field(default_factory=list)
+    tables: list[ParsedTable] = field(default_factory=list)
 
 
 def _headers() -> dict[str, str]:
@@ -106,10 +51,10 @@ def _get_json(url: str) -> dict:
     return response.json()
 
 
-def _get_text(url: str) -> str:
+def _get_response(url: str) -> httpx.Response:
     response = httpx.get(url, headers=_headers(), timeout=REQUEST_TIMEOUT, follow_redirects=True)
     response.raise_for_status()
-    return response.text
+    return response
 
 
 @lru_cache(maxsize=1)
@@ -175,14 +120,16 @@ def fetch_filing(req: IngestRequest) -> RawFiling:
     """Return a RawFiling for the requested ticker/period."""
     if req.source_url:
         source_url = req.source_url
-        text = _extract_text(_get_text(source_url))
+        response = _get_response(source_url)
+        parsed = parse_filing_content(response.content, source_url=source_url, content_type=response.headers.get("content-type"))
     else:
         cik = _resolve_cik(req.ticker)
         submissions_url = f"{SEC_DATA_BASE_URL}/submissions/CIK{cik}.json"
         submissions = _get_json(submissions_url)
         accession_number, primary_document = _select_filing(submissions, req.filing_type, req.fiscal_year)
         source_url = _archive_url(cik, accession_number, primary_document)
-        text = _extract_text(_get_text(source_url))
+        response = _get_response(source_url)
+        parsed = parse_filing_content(response.content, source_url=source_url, content_type=response.headers.get("content-type"))
 
     return RawFiling(
         ticker=req.ticker,
@@ -190,5 +137,7 @@ def fetch_filing(req: IngestRequest) -> RawFiling:
         fiscal_period=req.fiscal_period,
         fiscal_year=req.fiscal_year,
         source_url=source_url,
-        text=text,
+        text=parsed.text,
+        sections=parsed.sections,
+        tables=parsed.tables,
     )
