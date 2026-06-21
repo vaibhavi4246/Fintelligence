@@ -141,6 +141,21 @@ CREATE INDEX ON chunks USING ivfflat (embedding vector_cosine_ops) WITH (lists =
 
 ---
 
+## Day 4 (Thu, Week 1) — 2026-06-21
+
+### What Vaibhavi did
+
+| Item | Status |
+|---|---|
+| `backend/app/ingestion/chunker.py` — section-aware chunker with MD&A 512t/50 overlap, Risk Factors at item boundaries, tables atomic | Done |
+| `backend/tests/unit/test_chunker.py` — overlap and atomic table tests | Done |
+
+### Day 4 EOW gate (Vaibhavi)
+- [x] `pytest backend/tests/unit/test_chunker.py -q` passes
+- [x] `pytest backend/tests/integration/test_pipeline.py -q` passes
+
+---
+
 ## Day 4 + Day 5 (Thu–Fri, Week 1) — 2026-06-21 | Branch: Sanyam/day4
 
 ### What Sanyam did (Thu — embedding pipeline)
@@ -178,7 +193,7 @@ CREATE INDEX ON chunks USING ivfflat (embedding vector_cosine_ops) WITH (lists =
 | What | Stub file to replace | Real implementation |
 |---|---|---|
 | **EDGAR fetch** | `backend/app/ingestion/edgar.py` — real SEC fetch + raw text extraction | Done (Tue W1 complete) |
-| **Chunker** | `backend/app/ingestion/chunker.py` — naive 512t/50 overlap | Section-aware: MD&A 512t/50 overlap, Risk Factors at item boundaries, tables as atomic JSON chunks — Thu W1 Vaibhavi |
+| **Chunker** | `backend/app/ingestion/chunker.py` — naive 512t/50 overlap | Section-aware: MD&A 512t/50 overlap, Risk Factors at item boundaries, tables as atomic JSON chunks — Done |
 
 **Interface contract (stable — do not change signatures):**
 - `fetch_filing(req: IngestRequest) -> RawFiling` — populate `.text` with real filing content
@@ -193,10 +208,10 @@ CREATE INDEX ON chunks USING ivfflat (embedding vector_cosine_ops) WITH (lists =
 | Day | Deliverable |
 |---|---|
 | **Tue W1** | SEC EDGAR REST API fetch working: AAPL, GS, BLK 10-Ks fetched and raw text stored | Done |
-| **Wed W1** | pdfplumber parser: text + section labels + tables as structured JSON |
-| **Thu W1** | Real section-aware chunker: MD&A 512t/50 overlap, Risk Factors at item boundaries, tables atomic |
+| **Wed W1** | pdfplumber parser: text + section labels + tables as structured JSON | Done |
+| **Thu W1** | Real section-aware chunker: MD&A 512t/50 overlap, Risk Factors at item boundaries, tables atomic | Done |
 | **Fri W1** | Next.js 14 project init + document upload page + file → `POST /ingest` + status indicator |
 
 ---
 
-*Updated: 2026-06-21 | Sanyam Week 1 complete (Day 1–5). Vaibhabi Tue W1 complete; Wed–Fri pending.*
+*Updated: 2026-06-21 | Sanyam Week 1 complete (Day 1–5). Vaibhabi Tue–Thu W1 complete; Fri pending.*
