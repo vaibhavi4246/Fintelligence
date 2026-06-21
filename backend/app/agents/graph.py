@@ -1,25 +1,20 @@
 """LangGraph DAG assembly.
 
-W1 Tue: a single no-op node, just to prove LangGraph is installed and wired.
-Subsequent days replace/extend this with the real agents
-(retrieval -> contradiction -> risk -> assembler).
+W1 Wed: retrieval stub -> extraction node.
+Subsequent weeks add contradiction, risk, assembler nodes.
 """
 from langgraph.graph import END, START, StateGraph
 
+from app.agents.extraction import extraction_node
 from app.agents.state import AgentState
-
-
-def _noop(state: AgentState) -> AgentState:
-    """Placeholder agent — passes state through unchanged."""
-    return state
 
 
 def build_graph():
     """Compile and return the agent graph."""
     builder = StateGraph(AgentState)
-    builder.add_node("noop", _noop)
-    builder.add_edge(START, "noop")
-    builder.add_edge("noop", END)
+    builder.add_node("extraction", extraction_node)
+    builder.add_edge(START, "extraction")
+    builder.add_edge("extraction", END)
     return builder.compile()
 
 
