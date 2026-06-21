@@ -68,7 +68,7 @@ class Chunk(Base):
     )
     chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    embedding = mapped_column(Vector(768), nullable=False)
+    embedding = mapped_column(Vector(768), nullable=True)
     section_label: Mapped[str | None] = mapped_column(String(128), nullable=True)
     page_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
 

@@ -17,12 +17,10 @@
 | `.gitignore` — per plan §6 | Done |
 | `CLAUDE.md` — project working rules (day-wise, branch-per-day, commit convention) | Done |
 
-
-
 ### Day 1 EOW gate (Sanyam)
-- [ ] Docker Desktop installed + `docker compose up` runs clean
-- [ ] `/health` returns 200
-- [ ] PR `sanyam/day1 → dev` opened and reviewed
+- [x] Docker Desktop installed + `docker compose up` runs clean
+- [x] `/health` returns 200
+- [x] PR `sanyam/day1 → main` opened and reviewed
 
 ---
 
@@ -108,4 +106,95 @@ CREATE INDEX ON chunks USING ivfflat (embedding vector_cosine_ops) WITH (lists =
 
 ---
 
-*Updated: 2026-06-19 | Next update: end of Day 2*
+## Day 2 (Tue, Week 1) — 2026-06-21 | Branch: Sanyam/day2 → merged main
+
+### What Sanyam did
+
+| Item | Status |
+|---|---|
+| `backend/app/core/config.py` — pydantic-settings: DATABASE_URL, LLM_PROVIDER, GROQ_API_KEY, Ollama config, embedding provider | Done |
+| `backend/app/db/session.py` — SQLAlchemy engine + SessionLocal + FastAPI `get_db()` dependency | Done |
+| `.env.example` — added Groq, Ollama, embedding provider vars | Done |
+| `backend/requirements.txt` — added groq, sentence-transformers, tiktoken, numpy | Done |
+| `backend/app/schemas/ingest.py` — IngestRequest + IngestResponse Pydantic models | Done |
+| `backend/app/ingestion/edgar.py` — EDGAR fetch **stub** (TEMP — Vaibhavi replaces) | Done |
+| `backend/app/api/ingest.py` — `POST /ingest`: inserts Document row, returns document_id | Done |
+| `backend/app/agents/state.py` — AgentState TypedDict for LangGraph | Done |
+| `backend/app/agents/graph.py` — LangGraph StateGraph wired | Done |
+| `backend/app/main.py` — ingest router registered | Done |
+| `backend/tests/integration/test_ingest.py` — 2 tests pass | Done |
+
+---
+
+## Day 3 (Wed, Week 1) — 2026-06-21 | Branch: Sanyam/day3 → merged main
+
+### What Sanyam did
+
+| Item | Status |
+|---|---|
+| `backend/app/schemas/claim.py` — Claim + ClaimExtraction Pydantic models (confidence 0–1 constrained, stated_cause field) | Done |
+| `backend/app/core/llm.py` — `chat_json()`: Groq primary (JSON mode) → Ollama fallback | Done |
+| `backend/app/agents/extraction.py` — `extract_claims()` + `extraction_node` for LangGraph DAG | Done |
+| `backend/app/agents/graph.py` — extraction node wired (replaces no-op) | Done |
+| `backend/tests/fixtures/sample_chunks.py` — 3 hand-picked MD&A/financial/risk chunks | Done |
+| `backend/tests/unit/test_extraction.py` — 4 tests pass (monkeypatched in CI; live LLM if GROQ_API_KEY set) | Done |
+
+---
+
+## Day 4 + Day 5 (Thu–Fri, Week 1) — 2026-06-21 | Branch: Sanyam/day4
+
+### What Sanyam did (Thu — embedding pipeline)
+
+| Item | Status |
+|---|---|
+| `backend/app/core/embeddings.py` — `embed_texts()`: bge-base-en-v1.5 (768-dim) primary, OpenAI text-embedding-3-small (dim=768) fallback | Done |
+| `backend/app/ingestion/embed_pipeline.py` — `embed_pending_chunks(db)`: selects NULL-embedding chunks, batches at 100, writes back | Done |
+| `backend/scripts/build_ivfflat_index.py` — IVFFlat index `CREATE INDEX IF NOT EXISTS` post-load | Done |
+| `backend/app/db/migrations/versions/20260621_0002_make_embedding_nullable.py` — chunks.embedding nullable (insert-then-embed pattern) | Done |
+| `backend/app/db/models.py` — embedding column `nullable=True` | Done |
+| `backend/tests/unit/test_embeddings.py` — 2 tests: 768-dim shape + empty list | Done |
+
+### What Sanyam did (Fri — eval cases + integration test)
+
+| Item | Status |
+|---|---|
+| `backend/app/ingestion/chunker.py` — minimal 512t/50-overlap tiktoken chunker, light section heuristic (**TEMP** — Vaibhavi replaces) | Done |
+| `backend/tests/fixtures/aapl_q2_sample.txt` — bundled AAPL Q2-2023 10-Q excerpt | Done |
+| `backend/scripts/seed_eval_cases.py` — 20 manual EvalTestCase rows (test_set_id='w1-manual', adversarial=False) | Done |
+| `backend/tests/integration/test_pipeline.py` — chunk → embed (monkeypatched) → cosine query → non-empty results | Done |
+| `summary.md` — updated with Day 2–5 status + handoff notes for Vaibhavi | Done |
+
+### EOW gate (Week 1 — ALL PASS)
+- [x] `alembic upgrade head` runs with 0 errors (2 migrations applied)
+- [x] All 9 tests pass: `pytest tests/` green
+- [x] `seed_eval_cases.py` → 20 rows in `eval_test_cases` (`SELECT count(*) FROM eval_test_cases` = 20)
+- [x] Integration test: AAPL fixture → 3 chunks → embed (monkeypatched 768-dim) → cosine query returns results
+- [x] `POST /ingest` returns valid UUID `document_id`, `processing_status=pending`
+
+---
+
+## Left for Vaibhavi — required before Sanyam's W2 `/retrieve` can run on real data
+
+| What | Stub file to replace | Real implementation |
+|---|---|---|
+| **EDGAR fetch** | `backend/app/ingestion/edgar.py` — returns placeholder text | Real EDGAR REST API (selectolax/BeautifulSoup + XBRL facts) — Tue W1 Vaibhavi |
+| **Chunker** | `backend/app/ingestion/chunker.py` — naive 512t/50 overlap | Section-aware: MD&A 512t/50 overlap, Risk Factors at item boundaries, tables as atomic JSON chunks — Thu W1 Vaibhavi |
+
+**Interface contract (stable — do not change signatures):**
+- `fetch_filing(req: IngestRequest) -> RawFiling` — populate `.text` with real filing content
+- `chunk_text(text, fiscal_period) -> list[Chunk]` — populate `section_label`, `page_number` from real parsing
+
+---
+
+## Vaibhavi Week 1 remaining deliverables
+
+| Day | Deliverable |
+|---|---|
+| **Tue W1** | SEC EDGAR REST API fetch working: AAPL, GS, BLK 10-Ks fetched and raw text stored |
+| **Wed W1** | pdfplumber parser: text + section labels + tables as structured JSON |
+| **Thu W1** | Real section-aware chunker: MD&A 512t/50 overlap, Risk Factors at item boundaries, tables atomic |
+| **Fri W1** | Next.js 14 project init + document upload page + file → `POST /ingest` + status indicator |
+
+---
+
+*Updated: 2026-06-21 | Sanyam Week 1 complete (Day 1–5). Vaibhavi Tue–Fri W1 pending.*
